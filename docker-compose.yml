@@ -1,7 +1,8 @@
 version: '3.8'
+
 services:
   frontend:
-    build: 
+    build:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
@@ -9,11 +10,12 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+      - /app/.next
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
-      - NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}
-      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - NEXT_PUBLIC_API_URL=http://localhost:5000
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
     depends_on:
       - backend
 
@@ -22,17 +24,26 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "5000:5000"
     volumes:
       - ./backend:/app
-      - chrome-data:/app/chrome_user_data
     environment:
+      - FLASK_APP=backend.app:create_app
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_KEY=${SUPABASE_KEY}
-      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET}
       - FRONTEND_URL=http://localhost:3000
-      - DEBUG=1
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - app-network
 
-volumes:
-  chrome-data:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

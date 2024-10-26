@@ -1,19 +1,13 @@
-# frontend/Dockerfile
-FROM node:20-alpine
+FROM node:20-alpine AS development
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-
 # Install dependencies
+COPY package*.json ./
 RUN npm install
 
-# Copy local code to container
+# Copy source
 COPY . .
 
-# Build the app
-RUN npm run build
-
-# Start the app
+# Start development server
 CMD ["npm", "run", "dev"]
